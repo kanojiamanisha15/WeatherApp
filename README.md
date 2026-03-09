@@ -69,6 +69,9 @@ A simple frontend application that displays current weather and 5-day forecast u
 ```
 src/
 ├── components/       # Reusable UI components
+    └── ui/
+      ├── Button.jsx
+      └── SearchInput.jsx
 │   ├── CitySearch.jsx
 │   ├── CurrentWeather.jsx
 │   ├── Forecast.jsx
