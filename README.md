@@ -80,6 +80,7 @@ src/
 │   ├── index.js
 │   └── slices/
 │       ├── themeSlice.js
+│       ├── weatherSlice.js
 │       └── searchSlice.js
 ├── services/        # API and React Query
 │   ├── api.js
