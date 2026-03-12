@@ -1,9 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { getCurrentWeather, getForecast, hasApiKey } from './api';
 
-export const weatherKeys = {
+const weatherKeys = {
   current: (city) => ['weather', 'current', city],
-  currentByCoords: (lat, lon) => ['weather', 'current', 'coords', lat, lon],
   forecast: (lat, lon) => ['weather', 'forecast', lat, lon],
 };
 

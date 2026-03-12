@@ -1,42 +1,29 @@
-import { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { fetchCurrentWeather, fetchForecast } from '../store/slices/weatherSlice';
 import { hasApiKey } from '../services/api';
+import { useCurrentWeather, useForecast } from '../services/weatherQueries';
 import CurrentWeather from '../components/CurrentWeather';
 import Forecast from '../components/Forecast';
 
 export default function CityWeatherPage() {
   const { city } = useParams();
   const decodedCity = city ? decodeURIComponent(city) : '';
-  const dispatch = useDispatch();
 
   const {
-    currentWeather: currentData,
-    forecast: forecastData,
-    currentWeatherStatus,
-    currentWeatherError,
-    forecastStatus,
-    forecastError,
-  } = useSelector((state) => state.weather);
+    data: currentData,
+    isLoading: currentLoading,
+    isError: currentError,
+    error: currentWeatherError,
+  } = useCurrentWeather(decodedCity);
 
-  const currentLoading = currentWeatherStatus === 'loading';
-  const currentError = currentWeatherStatus === 'failed';
-  const forecastLoading = forecastStatus === 'loading';
+  const lat = currentData?.coord?.lat;
+  const lon = currentData?.coord?.lon;
 
-  useEffect(() => {
-    if (decodedCity && hasApiKey()) {
-      dispatch(fetchCurrentWeather(decodedCity));
-    }
-  }, [decodedCity, dispatch]);
-
-  useEffect(() => {
-    const lat = currentData?.coord?.lat;
-    const lon = currentData?.coord?.lon;
-    if (typeof lat === 'number' && typeof lon === 'number' && hasApiKey()) {
-      dispatch(fetchForecast({ lat, lon }));
-    }
-  }, [currentData?.coord?.lat, currentData?.coord?.lon, dispatch]);
+  const {
+    data: forecastData,
+    isLoading: forecastLoading,
+    isError: forecastIsError,
+    error: forecastError,
+  } = useForecast(lat, lon);
 
   if (!hasApiKey()) {
     return (
@@ -74,7 +61,7 @@ export default function CityWeatherPage() {
   }
 
   if (currentError) {
-    const message = currentWeatherError || 'Failed to load weather';
+    const message = currentWeatherError?.response?.data?.message || currentWeatherError?.message || 'Failed to load weather';
     return (
       <div className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 text-red-800 dark:text-red-200 animate-fade-in">
         <p className="font-medium">Could not load weather</p>
@@ -96,12 +83,18 @@ export default function CityWeatherPage() {
         <span className="text-slate-700 dark:text-slate-300">{decodedCity}</span>
       </nav>
       <CurrentWeather data={currentData} cityName={decodedCity} />
-      {forecastLoading && (
+      {forecastLoading ? (
         <div className="flex justify-center py-8" role="status" aria-live="polite">
           <div className="w-8 h-8 border-2 border-sky-500 border-t-transparent rounded-full animate-spin" />
         </div>
-      )}
-      {!forecastError && forecastData && <Forecast forecastData={forecastData} />}
+      ) : forecastIsError ? (
+        <div className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 text-red-800 dark:text-red-200 animate-fade-in">
+          <p className="font-medium">Could not load forecast</p>
+          <p className="text-sm mt-1">{forecastError?.response?.data?.message || forecastError?.message || 'Failed to load forecast'}</p>
+        </div>
+      ) : forecastData ? (
+        <Forecast forecastData={forecastData} />
+      ) : null}
     </div>
   );
 }
